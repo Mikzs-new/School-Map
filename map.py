@@ -466,7 +466,7 @@ class Map():
         self.G.add_edge('AGM 214 - Mass Communication Room', 'AGM 213 - Communication Hub')
         self.G.add_edge('AGM to Lobby Passage', 'AGM Canteen')
         self.G.add_edge('AGM Canteen', 'AGM 1st Floor Stairs 2')
-        self.G.add_edge('AGM 1st Floor Stairs 1', 'AGM 110 - Bookstore & Printing Office')
+        self.G.add_edge('AGM 1st Floor Stairs 2', 'AGM 110 - Bookstore & Printing Office')
         self.G.add_edge('AGM to FGM Passage', 'AGM 110 - Bookstore & Printing Office')
         self.G.add_edge('AGM to Road Passage', 'AGM 1st Floor Stairs 1')
         self.G.add_edge('AGM 101 - Hydraulics Laboratory', 'AGM 1st Floor Stairs 1')
@@ -519,6 +519,7 @@ class Map():
         self.G.add_edge('FGM 202 - Nursing Skills Lab 1', 'FGM 203 - Nursing Skills Lab 2')
         self.G.add_edge('FGM 2nd Floor Elevator', 'FGM 203 - Nursing Skills Lab 2')
         self.G.add_edge('FGM 2nd Floor Elevator', 'FGM 204 - COAHS Dean\'s Office')
+        self.G.add_edge('FGM 2nd Floor Fire Exit', 'FGM 204 - COAHS Dean\'s Office')
         self.G.add_edge('FGM 205 - Nursing Skills Lab 3', 'FGM 204 - COAHS Dean\'s Office')
         self.G.add_edge('FGM 2nd Floor Elevator', 'FGM 206 - Anatomy Lab')
         self.G.add_edge('FGM 203 - Nursing Skills Lab 2', 'FGM 206 - Anatomy Lab')
@@ -539,6 +540,7 @@ class Map():
         self.G.add_edge('FGM 303 Room', 'FGM 3rd Floor Elevator')
         self.G.add_edge('FGM 305 - Stock Room', 'FGM 3rd Floor Elevator')
         self.G.add_edge('FGM 305 - Stock Room', 'FGM 306 Room')
+        self.G.add_edge('FGM 3rd Floor Fire Exit', 'FGM 306 Room')
         self.G.add_edge('FGM 307 Room', 'FGM 2nd Floor Elevator')
         self.G.add_edge('FGM 307 Room', 'FGM 303 Room')
         self.G.add_edge('FGM 307 Room', 'FGM 308 Room')
@@ -560,10 +562,12 @@ class Map():
         self.G.add_edge('FGM 403 Room', 'FGM 4th Floor Elevator')
         self.G.add_edge('FGM 404 Room', 'FGM 4th Floor Elevator')
         self.G.add_edge('FGM 404 Room', 'FGM 405 Room')
+        self.G.add_edge('FGM 4th Floor Fire Exit', 'FGM 405 Room')
         self.G.add_edge('FGM 406 Room', 'FGM 4th Floor Elevator')
         self.G.add_edge('FGM 406 Room', 'FGM 403 Room')
         self.G.add_edge('FGM 406 Room', 'FGM 407 - Stock Room')
-        self.G.add_edge('FGM 406 Room', 'FGM 408 - Electrical Room')
+        self.G.add_edge('FGM 406 Room', 'FGM Tambayanan')
+        self.G.add_edge('FGM Tambayanan', 'FGM 408 - Electrical Room')
         self.G.add_edge('FGM 407 - Stock Room', 'FGM 408 - Electrical Room')
         self.G.add_edge('FGM 409 Room', 'FGM 408 - Electrical Room')
         self.G.add_edge('FGM 409 Room', 'FGM 410 Room')
@@ -579,6 +583,7 @@ class Map():
         self.G.add_edge('FGM 503 Room', 'FGM 5th Floor Elevator')
         self.G.add_edge('FGM 5th Floor Elevator', 'FGM 505 - Interrogation Room')
         self.G.add_edge('FGM 505 - Interrogation Room', 'FGM 506 - Dark Room Forensic Photography')
+        self.G.add_edge('FGM 5th Floor Fire Exit', 'FGM 506 - Dark Room Forensic Photography')
         self.G.add_edge('FGM 507 - Crime Scene Room', 'FGM 506 - Dark Room Forensic Photography')
         self.G.add_edge('FGM 507 - Crime Scene Room', 'FGM 508 - Faculty Lounge')
         self.G.add_edge('FGM 509 - Court Room', 'FGM 508 - Faculty Lounge')
@@ -602,6 +607,7 @@ class Map():
         self.G.add_edge('FGM 606 Room', 'FGM 603 Room')
         self.G.add_edge('FGM 606 Room', 'FGM 607 Room')
         self.G.add_edge('FGM 608 Room', 'FGM 607 Room')
+        self.G.add_edge('FGM 6th Floor Fire Exit', 'FGM 607 Room')
         self.G.add_edge('FGM 608 Room', 'FGM 609 - Electrical Room')
         self.G.add_edge('FGM 607 Room', 'FGM 609 - Electrical Room')
         self.G.add_edge('FGM 610 Room', 'FGM 609 - Electrical Room')
@@ -609,6 +615,11 @@ class Map():
         self.G.add_edge('FGM 612 - CR Women', 'FGM 611 Room')
         self.G.add_edge('FGM 612 - CR Women', 'FGM 6th Floor Stairs 2')
         self.G.add_edge('FGM 611 Room', 'FGM 6th Floor Stairs 2')
+        
+        self.G.add_edge('FGM 6th Floor Fire Exit', 'FGM 5th Floor Fire Exit')
+        self.G.add_edge('FGM 4th Floor Fire Exit', 'FGM 5th Floor Fire Exit')
+        self.G.add_edge('FGM 4th Floor Fire Exit', 'FGM 3rd Floor Fire Exit')
+        self.G.add_edge('FGM 2nd Floor Fire Exit', 'FGM 3rd Floor Fire Exit')
 
     def show_figure(self):
         plt.figure(figsize=(24, 24),
@@ -644,16 +655,16 @@ class Map():
             print(node)
 
     def print_isolated(self):
-        no_edges = nx.isolates(G)
+        no_edges = nx.isolates(self.G)
         n = list(no_edges)
         for node in n:
             print(node)
 
-    def get_shortest_path(self):
-        pass
+    def get_shortest_path(self, source, target):
+        return nx.shortest_path(self.G, source=source, target=target)
     
-    def get_multiple_paths(self):
-        pass
+    def get_multiple_paths(self, source, target):
+        return nx.all_shortest_paths(self.G, source=source, target=target)
 
     def get_easy_path(self):
         pass
