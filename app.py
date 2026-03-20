@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, render_template
-from . import map
+from map import Map
 
 
 app = Flask(__name__)
@@ -23,5 +23,6 @@ def get_data():
     return jsonify(list(G.nodes()))
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    map = Map()
+    map.print_nodes()
 
