@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room list</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f1f5f9;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .container {
+            width: 1200px;
+            max-width: 100%;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+            display: flex;
+            overflow: hidden;
+            border: 1px solid #e9eef2;
+        }
+
+        .room-list {
+            width: 360px;
+            background: #fcfcfd;
+            border-right: 1px solid #edf2f6;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .room-header {
+            padding: 24px 22px 16px 22px;
+            border-bottom: 1px solid #edf2f6;
+        }
+
+        .room-header h2 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #1e2b3a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .room-count {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: #5e6f88;
+            background: #eef3f8;
+            padding: 4px 10px;
+            border-radius: 40px;
+        }
+
+        .room-sub {
+            font-size: 0.85rem;
+            color: #5e6f88;
+            margin-top: 6px;
+        }
+
+        .items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 16px 24px 16px;
+        }
+
+        .room-item {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 18px 18px 16px 18px;
+            margin-bottom: 10px;
+            border: 1px solid #eef3f8;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.1s;
+        }
+
+        .room-item:hover {
+            background: #f8fafc;
+            border-color: #d0ddee;
+        }
+
+        .room-number {
+            width: 44px;
+            height: 44px;
+            background: #e6edf6;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1e3a5f;
+            font-weight: 500;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            border: 1px solid #cbdae9;
+        }
+
+        .room-info {
+            flex: 1;
+        }
+
+        .room-title {
+            font-weight: 550;
+            font-size: 1.2rem;
+            color: #1a2b3c;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .room-badge {
+            background: #eef3f8;
+            border-radius: 30px;
+            padding: 2px 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #2b4b6f;
+            border: 1px solid #d2e0ee;
+        }
+
+        .room-details {
+            margin-top: 8px;
+            display: flex;
+            gap: 24px;
+            font-size: 0.85rem;
+            color: #4f657f;
+        }
+
+        .room-details div {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .canvas {
+            flex: 1;
+            background: #f8fafd;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .canvas-header {
+            padding: 24px 28px 12px 28px;
+            border-bottom: 1px solid #e3eaf0;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .dim {
+            background: #eef3f8;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-weight: 450;
+            color: #2b4b6f;
+            border: 1px solid #d0deed;
+            font-size: 0.9rem;
+        }
+
+        .canvas-area {
+            flex: 1;
+            margin: 28px;
+            background: #f1f5fa;
+            border-radius: 28px;
+            border: 2px dashed #b9cfec;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.02);
+        }
+
+        .big-square {
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+            background: #ffffff;
+            border-radius: 24px;
+            border: 3px solid #2b4f6e;
+            box-shadow: 0 8px 20px -8px rgba(30, 50, 70, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            background-image: none;
+            background-size: cover;
+            background-position: center;
+            margin: 0;
+            cursor: pointer;
+        }
+        #mapContainer {
+    position: relative;
+    overflow: hidden;
+}
+
+#floorImage {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-fit: fill;
+    object-position: center;
+    z-index: 1;
+}
+
+#canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+}
+
+/* ROOM POPUP */
+#roomOverlay {
+     position: fixed; /* ✅ full screen */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0, 0, 0, 0.85); /* dark background */
+    
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 999;
+}
+
+
+#roomOverlay img {
+      max-width: 90%;
+    max-height: 90%;
+    object-fit: contain; /* ✅ show full image */
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+
+#roomOverlay button {
+     position: absolute;
+    top: 20px;
+    right: 20px;
+
+    padding: 10px 14px;
+    border: none;
+    background: red;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+        .big-square:hover {
+            border-color: #3f6b91;
+            background: #f9fcff;
+        }
+
+        .canvas-footer {
+            margin: 0 28px 24px 28px;
+            padding-top: 16px;
+            border-top: 1px solid #e3eaf0;
+            display: flex;
+            gap: 24px;
+            font-size: 0.85rem;
+            color: #4f657f;
+        }
+
+        .footer-item {
+            background: #eef3f8;
+            padding: 4px 14px;
+            border-radius: 40px;
+            border: 1px solid #d0deed;
+        }
+
+        .no-select {
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="room-list">
+        <div class="room-header">
+            <h2>
+                Buildings
+                <span class="room-count">buildings</span>
+            </h2>
+        </div>
+
+        <div class="items" id="buildingList">
+    <div class="room-item" onclick="showRooms('EMM')">
+        <div class="room-number">1</div>
+        <div class="room-info">
+            <div class="room-title">EMM Building</div>
+        </div>
+    </div>
+
+              <div class="room-item" onclick="showRooms('FGM')">
+        <div class="room-number">2</div>
+        <div class="room-info">
+            <div class="room-title">FGM Building</div>
+        </div>
+    </div>
+
+
+           <div class="room-item" onclick="showRooms('AGM')">
+        <div class="room-number">3</div>
+        <div class="room-info">
+            <div class="room-title">AGM Building</div>
+        </div>
+    </div>
+
+             <div class="room-item" onclick="showRooms('Library')">
+        <div class="room-number">4</div>
+        <div class="room-info">
+            <div class="room-title">Library</div>
+        </div>
+    </div>
+
+           <div class="room-item" onclick="showRooms('Entrance')">
+        <div class="room-number">5</div>
+        <div class="room-info">
+            <div class="room-title">Entrance</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div class="canvas">
+  <div class="big-square" id="mapContainer">
+
+    <!-- FLOOR BLUEPRINT -->
+    <img id="floorImage" src="" />
+
+    <!-- DRAWING CANVAS -->
+    <canvas id="canvas"></canvas>
+
+    <!-- ROOM IMAGE OVERLAY -->
+    <div id="roomOverlay">
+         <button onclick="closeRoom()">✕</button>
+        <img id="roomImg">
+    </div>
+
+  </div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+
+
+
+</html>
