@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Finder</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #f1f5f9;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 24px;
+        }
+        .container {
+            width: 1200px; max-width: 100%; background: #fff; border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.06); display: flex;
+            overflow: hidden; border: 1px solid #e9eef2; min-height: 600px;
+        }
+
+        /* ═══════════════════════════════════════
+           SIDEBAR
+        ═══════════════════════════════════════ */
+        .room-list {
+            width: 360px; min-width: 360px; background: #fcfcfd;
+            border-right: 1px solid #edf2f6;
+            display: flex; flex-direction: column; position: relative;
+        }
+
+        /* Normal header (buildings/floors view) */
+        .room-header { padding: 20px 22px 14px 22px; border-bottom: 1px solid #edf2f6; flex-shrink: 0; }
+        .room-header h2 { font-size: 1.4rem; font-weight: 600; color: #1e2b3a; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .room-count { font-size: 0.85rem; font-weight: 400; color: #5e6f88; background: #eef3f8; padding: 3px 10px; border-radius: 40px; }
+
+        /* Search */
+        .search-wrapper { position: relative; margin-bottom: 10px; }
+        .search-input-row { display: flex; align-items: center; background: #f0f5fb; border: 1px solid #d4e2f0; border-radius: 10px; padding: 0 12px; gap: 8px; transition: border-color 0.15s; }
+        .search-input-row:focus-within { border-color: #6ba3d6; background: #fff; box-shadow: 0 0 0 3px rgba(100,160,220,0.15); }
+        #searchInput { flex: 1; border: none; background: transparent; padding: 9px 0; font-size: 0.9rem; color: #1e2b3a; outline: none; }
+        #searchInput::placeholder { color: #9fb5cc; }
+        #searchDropdown { display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #fff; border: 1px solid #dce8f4; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); z-index: 200; overflow: hidden; max-height: 320px; overflow-y: auto; }
+        .search-result-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; cursor: pointer; font-size: 0.88rem; color: #1e2b3a; border-bottom: 1px solid #f0f5fb; transition: background 0.1s; }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:hover { background: #f0f7ff; }
+        .search-no-result { padding: 14px; text-align: center; color: #7a95b0; font-size: 0.88rem; }
+
+        /* Location button */
+        #setLocationBtn { width: 100%; padding: 9px 14px; background: #f0f7ff; border: 1px solid #c2daf5; border-radius: 10px; cursor: pointer; font-size: 0.88rem; font-weight: 500; color: #1e5fa3; display: flex; align-items: center; gap: 8px; transition: background 0.15s; }
+        #setLocationBtn:hover { background: #daeeff; border-color: #90bfe8; }
+        #locationStatus { font-size: 0.78rem; color: #4f7aaa; margin-top: 6px; padding: 0 2px; min-height: 18px; display: flex; align-items: center; gap: 5px; }
+        #locationStatus .loc-dot { width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; flex-shrink: 0; }
+        #locationStatus.set .loc-dot { background: #22c55e; }
+
+        /* Building/floor list */
+        .items { flex: 1; overflow-y: auto; padding: 16px 16px 24px 16px; }
+        .room-item { background: #fff; border-radius: 14px; padding: 15px 18px; margin-bottom: 10px; border: 1px solid #eef3f8; display: flex; align-items: center; gap: 14px; transition: all 0.1s; cursor: pointer; }
+        .room-item:hover { background: #f8fafc; border-color: #d0ddee; }
+        .room-number { width: 42px; height: 42px; background: #e6edf6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1e3a5f; font-weight: 600; font-size: 1rem; flex-shrink: 0; border: 1px solid #cbdae9; }
+        .room-info { flex: 1; }
+        .room-title { font-weight: 550; font-size: 1rem; color: #1a2b3c; display: flex; align-items: center; gap: 8px; }
+
+        /* ═══════════════════════════════════════
+           ROUTE PANEL — replaces sidebar content
+        ═══════════════════════════════════════ */
+        #routePanel {
+            display: none;
+            flex-direction: column;
+            position: absolute; inset: 0;
+            background: #fff;
+            z-index: 10;
+        }
+
+        /* Route header */
+        .rp-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563a8 100%);
+            padding: 18px 20px 16px;
+            flex-shrink: 0;
+        }
+        .rp-header-top {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+        }
+        .rp-title { color: #fff; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .rp-close {
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+            color: #fff; border-radius: 8px; padding: 5px 10px; cursor: pointer; font-size: 0.82rem;
+            transition: background 0.15s;
+        }
+        .rp-close:hover { background: rgba(255,255,255,0.25); }
+
+        /* From / To summary */
+        .rp-summary {
+            background: rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 14px;
+            display: flex; flex-direction: column; gap: 6px;
+        }
+        .rp-summary-row { display: flex; align-items: center; gap: 10px; font-size: 0.82rem; color: rgba(255,255,255,0.9); }
+        .rp-summary-row .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; border: 2px solid #fff; }
+        .rp-summary-row .dot.from { background: #22c55e; }
+        .rp-summary-row .dot.to   { background: #f59e0b; }
+        .rp-summary-line { width: 2px; height: 10px; background: rgba(255,255,255,0.3); margin-left: 4px; }
+        .rp-summary-text { font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Step counter bar */
+        .rp-progress {
+            padding: 10px 20px 0;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .rp-step-counter { font-size: 0.78rem; font-weight: 600; color: #4f657f; text-transform: uppercase; letter-spacing: 0.05em; }
+        .rp-nav { display: flex; gap: 6px; }
+        .rp-nav-btn {
+            padding: 5px 14px; border: 1px solid #d4e2f0; border-radius: 8px;
+            background: #f0f5fb; color: #2b4b6f; font-size: 0.82rem; font-weight: 500; cursor: pointer;
+            transition: all 0.1s;
+        }
+        .rp-nav-btn:hover { background: #daeeff; }
+        .rp-nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        /* Progress dots */
+        .rp-dots { padding: 8px 20px 4px; display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+        .rp-dot { width: 8px; height: 8px; border-radius: 50%; background: #d4e2f0; transition: all 0.2s; }
+        .rp-dot.active { background: #2563a8; width: 22px; border-radius: 4px; }
+        .rp-dot.done { background: #22c55e; }
+
+        /* Steps list */
+        #routeStepsList { flex: 1; overflow-y: auto; padding: 8px 0 20px; }
+
+        .rs-item {
+            display: flex; gap: 0; padding: 0 20px;
+            cursor: pointer; transition: background 0.1s;
+        }
+        .rs-item:hover { background: #f8fafc; }
+        .rs-item.rs-active { background: #eef6ff; }
+
+        /* Left column: icon + vertical connector line */
+        .rs-left {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 14px 0; width: 40px; flex-shrink: 0;
+        }
+        .rs-icon-wrap {
+            width: 34px; height: 34px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; flex-shrink: 0; border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .rs-icon-wrap.type-start    { background: #dcfce7; border-color: #22c55e; }
+        .rs-icon-wrap.type-stairs   { background: #fef9c3; border-color: #eab308; }
+        .rs-icon-wrap.type-exit     { background: #fee2e2; border-color: #ef4444; }
+        .rs-icon-wrap.type-transit  { background: #ede9fe; border-color: #7c3aed; }
+        .rs-icon-wrap.type-enter    { background: #dbeafe; border-color: #3b82f6; }
+        .rs-icon-wrap.type-destination { background: #ffedd5; border-color: #f97316; }
+        .rs-item.rs-active .rs-icon-wrap { transform: scale(1.1); box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+
+        .rs-line { flex: 1; width: 2px; background: #e3eaf0; margin: 3px 0; min-height: 16px; }
+        .rs-line.done { background: #22c55e; }
+        .rs-item:last-child .rs-line { display: none; }
+
+        /* Right column: text */
+        .rs-body { flex: 1; padding: 14px 0 14px 12px; border-bottom: 1px solid #f0f5fb; }
+        .rs-item:last-child .rs-body { border-bottom: none; }
+        .rs-item.rs-active .rs-body { border-bottom-color: #dbeafe; }
+
+        .rs-step-num { font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
+        .rs-label { font-size: 0.9rem; font-weight: 500; color: #1e2b3a; line-height: 1.35; }
+        .rs-item.rs-active .rs-label { font-weight: 700; color: #1e3a8a; }
+        .rs-sub { font-size: 0.76rem; color: #7a95b0; margin-top: 3px; display: flex; align-items: center; gap: 5px; }
+        .rs-sub-badge { background: #eef3f8; border: 1px solid #d4e2f0; border-radius: 20px; padding: 1px 8px; font-size: 0.7rem; font-weight: 500; color: #2b4b6f; }
+        .rs-view-hint { font-size: 0.7rem; color: #93adc8; margin-top: 4px; display: none; }
+        .rs-item.rs-active .rs-view-hint { display: block; }
+
+        /* Transit step style */
+        .rs-item.rs-transit { background: #faf5ff; }
+        .rs-item.rs-transit .rs-body { border-bottom-color: #ede9fe; }
+        .rs-item.rs-transit .rs-label { color: #6d28d9; font-style: italic; }
+
+        /* ═══════════════════════════════════════
+           CANVAS SIDE
+        ═══════════════════════════════════════ */
+        .canvas { flex: 1; background: #f8fafd; display: flex; flex-direction: column; padding: 16px; }
+        .big-square { flex: 1; background: #fff; border-radius: 20px; border: 2px solid #2b4f6e; box-shadow: 0 6px 18px -6px rgba(30,50,70,0.12); position: relative; overflow: hidden; cursor: pointer; min-height: 400px; }
+        .big-square:hover { border-color: #3f6b91; }
+        #floorImage { position: absolute; width: 100%; height: 100%; object-fit: fill; z-index: 1; }
+        #canvas { position: absolute; top: 0; left: 0; z-index: 2; }
+        #cvCanvas { position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
+
+        /* Map label when in route mode */
+        #mapStepLabel {
+            display: none;
+            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+            background: rgba(30,58,138,0.88); color: #fff;
+            padding: 5px 16px; border-radius: 20px; font-size: 0.78rem; font-weight: 600;
+            z-index: 10; white-space: nowrap; pointer-events: none;
+            backdrop-filter: blur(4px);
+        }
+
+        /* Room image popup */
+        #roomOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 999; }
+        #roomOverlay img { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #roomOverlay button { position: absolute; top: 20px; right: 20px; padding: 10px 14px; border: none; background: #ef4444; color: white; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; }
+
+        /* ═══════════════════════════════════════
+           LOCATION MODAL
+        ═══════════════════════════════════════ */
+        #locationModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .loc-modal-box { background: #fff; border-radius: 18px; width: 420px; max-width: 95vw; box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden; }
+        .loc-modal-header { padding: 20px 24px 16px; border-bottom: 1px solid #edf2f6; display: flex; align-items: center; justify-content: space-between; }
+        .loc-modal-header h3 { font-size: 1.05rem; font-weight: 600; color: #1e2b3a; }
+        .loc-modal-close { background: none; border: none; cursor: pointer; color: #7a95b0; font-size: 1.2rem; padding: 2px 6px; border-radius: 6px; }
+        .loc-modal-close:hover { background: #f0f5fb; }
+        .loc-modal-body { padding: 20px 24px; }
+        .loc-step { margin-bottom: 16px; }
+        .loc-step label { display: block; font-size: 0.78rem; font-weight: 700; color: #4f657f; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .loc-step select { width: 100%; padding: 10px 12px; border: 1px solid #d4e2f0; border-radius: 10px; font-size: 0.9rem; color: #1e2b3a; background: #f8fafd; outline: none; cursor: pointer; transition: border-color 0.15s; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234f657f' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+        .loc-step select:focus { border-color: #6ba3d6; box-shadow: 0 0 0 3px rgba(100,160,220,0.15); }
+        .loc-step select:disabled { opacity: 0.4; cursor: not-allowed; }
+        .loc-modal-footer { padding: 14px 24px 20px; display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #edf2f6; }
+        .loc-btn-cancel { padding: 9px 18px; border: 1px solid #d4e2f0; border-radius: 10px; background: #fff; color: #4f657f; font-size: 0.88rem; cursor: pointer; }
+        .loc-btn-cancel:hover { background: #f0f5fb; }
+        .loc-btn-confirm { padding: 9px 20px; border: none; border-radius: 10px; background: #1e5fa3; color: #fff; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+        .loc-btn-confirm:hover { background: #174d8a; }
+        .loc-btn-confirm:disabled { background: #90bfe8; cursor: not-allowed; }
+        .loc-btn-clear { padding: 9px 18px; border: 1px solid #fca5a5; border-radius: 10px; background: #fff5f5; color: #dc2626; font-size: 0.88rem; cursor: pointer; margin-right: auto; }
+        .loc-btn-clear:hover { background: #fee2e2; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- ── SIDEBAR ── -->
+    <div class="room-list">
+
+        <!-- Normal header (hidden during routing) -->
+        <div class="room-header" id="normalHeader">
+            <h2 id="sidebarTitle">Buildings <span class="room-count">buildings</span></h2>
+            <div class="search-wrapper">
+                <div class="search-input-row">
+                    <span style="font-size:0.95rem;color:#7a95b0;">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Search room or building…" autocomplete="off" />
+                </div>
+                <div id="searchDropdown"></div>
+            </div>
+            <button id="setLocationBtn" onclick="openLocationModal()">📍 Set My Location</button>
+            <div id="locationStatus">
+                <span class="loc-dot"></span>
+                <span id="locationStatusText">No location set — using default start</span>
+            </div>
+        </div>
+
+        <!-- Building/floor list -->
+        <div class="items" id="buildingList"></div>
+
+        <!-- ═══════════════════════════════════════
+             ROUTE PANEL — overlays the sidebar
+        ═══════════════════════════════════════ -->
+        <div id="routePanel">
+
+            <!-- Header with gradient -->
+            <div class="rp-header">
+                <div class="rp-header-top">
+                    <div class="rp-title">🗺️ Directions</div>
+                    <button class="rp-close" onclick="closeRoutePanel()">✕ Close</button>
+                </div>
+                <!-- From → To summary -->
+                <div class="rp-summary">
+                    <div class="rp-summary-row">
+                        <span class="dot from"></span>
+                        <span class="rp-summary-text" id="rpFrom">—</span>
+                    </div>
+                    <div class="rp-summary-line" style="margin-left:4px;"></div>
+                    <div class="rp-summary-row">
+                        <span class="dot to"></span>
+                        <span class="rp-summary-text" id="rpTo">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step counter + nav -->
+            <div class="rp-progress">
+                <div class="rp-step-counter" id="rpStepCounter">Step 1 of 1</div>
+                <div class="rp-nav">
+                    <button class="rp-nav-btn" id="rpPrevBtn" onclick="prevRouteStep()" disabled>← Back</button>
+                    <button class="rp-nav-btn" id="rpNextBtn" onclick="nextRouteStep()">Next →</button>
+                </div>
+            </div>
+
+            <!-- Progress dots -->
+            <div class="rp-dots" id="rpDots"></div>
+
+            <!-- Steps list -->
+            <div id="routeStepsList"></div>
+
+        </div>
+    </div>
+
+    <!-- ── MAP CANVAS ── -->
+    <div class="canvas">
+        <div class="big-square" id="mapContainer">
+            <img id="floorImage" src="" />
+            <canvas id="canvas"></canvas>
+            <canvas id="cvCanvas"></canvas>
+            <div id="mapStepLabel"></div>
+            <div id="roomOverlay">
+                <button onclick="closeRoom()">✕</button>
+                <img id="roomImg">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- LOCATION MODAL -->
+<div id="locationModal">
+    <div class="loc-modal-box">
+        <div class="loc-modal-header">
+            <h3>📍 Set Your Current Location</h3>
+            <button class="loc-modal-close" onclick="closeLocationModal()">✕</button>
+        </div>
+        <div class="loc-modal-body">
+            <div class="loc-step">
+                <label>Building</label>
+                <select id="locBuilding" onchange="onLocBuildingChange()"><option value="">— Select a building —</option></select>
+            </div>
+            <div class="loc-step">
+                <label>Floor</label>
+                <select id="locFloor" onchange="onLocFloorChange()" disabled><option value="">— Select a floor —</option></select>
+            </div>
+            <div class="loc-step">
+                <label>Room / Area</label>
+                <select id="locRoom" disabled><option value="">— Select a room or area —</option></select>
+            </div>
+        </div>
+        <div class="loc-modal-footer">
+            <button class="loc-btn-clear" onclick="clearLocation()">Clear Location</button>
+            <button class="loc-btn-cancel" onclick="closeLocationModal()">Cancel</button>
+            <button class="loc-btn-confirm" id="locConfirmBtn" onclick="confirmLocation()" disabled>Confirm</button>
+        </div>
+    </div>
+</div>
+
+<script async src="https://docs.opencv.org/4.x/opencv.js" onload="onOpenCvReady()"></script>
+<script src="script.js?v=2"></script>
+</body>
+</html>
