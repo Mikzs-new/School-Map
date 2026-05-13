@@ -12,7 +12,7 @@ let activeRouteStep = 0;
 const buildingImages = {
     EMM:      "SchoolBlueprints/EMM BUILDING.png",
     FGM:      "SchoolBlueprints/FGM BUILDING.png",
-    AGM:      "SchoolBlueprints/RMMC MAIN.png",
+    AGM:      "SchoolBlueprints/AGM.png",
     Library:  "SchoolBlueprints/LIBRARY BUILDING.png",
     Entrance: "SchoolBlueprints/ENTRANCE.png"
 };
@@ -28,7 +28,7 @@ const buildingConnections = {
     FGM:      { exitFloor: "Floor 1", exitRoom: "FGM HALLWAY" },
     AGM:      { exitFloor: "Floor 1", exitRoom: "AGM HALLWAY" },
     Library:  { exitFloor: "Floor 1", exitRoom: "Library HALLWAY" },
-    Entrance: { exitFloor: "Floor 1", exitRoom: null }
+    Entrance: { exitFloor: "Floor 1", exitRoom: "LOBBY Pavement Entrance" }
 };
 
 // ============================================================
@@ -303,10 +303,10 @@ const data = {
     Entrance: {
         "Floor 1": {
             map: "SchoolBlueprints/Entrance.png",
-            StartingPoint: { x1: 206, y1: 225, x2: 218, y2: 236 },
+            StartingPoint: { x1: 469, y1: 594, x2: 501, y2: 619 },
             rooms: [
-                {name: "LOBBY Emergency Exit", x1: 190, y1: 118, x2: 229, y2: 208, img:"SchoolPicture/ENTRANCE/LOBBY Emergency Exit.jpg"},
-                {name: "LOBBY Pavement Entrance", x1: 156, y1: 255, x2: 240, y2: 294, img:"SchoolPicture/ENTRANCE/LOBBY Pavement Entrance.jpg"}
+                {name: "LOBBY Emergency Exit", x1: 837, y1: 326, x2: 1017, y2: 423, img:"SchoolPicture/ENTRANCE/LOBBY Emergency Exit.jpg"},
+                {name: "LOBBY Pavement Entrance", x1: 589, y1: 330, x2: 719, y2: 414, img:"SchoolPicture/ENTRANCE/LOBBY Pavement Entrance.jpg"}
             ]
         }
     }
